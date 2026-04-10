@@ -10,6 +10,12 @@ export async function requestInvoice(req, res) {
     const orderNumber = normalizeOrderNumber(req.body?.orderNumber || "");
     const requestKey = `${req.ip}:${email}:${orderNumber}`;
 
+    console.log("[INVOICE_REQUEST_START]", {
+      email,
+      orderNumber,
+      ip: req.ip,
+    });
+
     if (!email || !orderNumber) {
       return res.status(400).json({
         ok: false,
@@ -30,6 +36,8 @@ export async function requestInvoice(req, res) {
 
     const validation = await validateOrderAndEmail({ email, orderNumber });
 
+    console.log("[INVOICE_VALIDATION_RESULT]", validation);
+
     if (validation.status !== "MATCHED") {
       return res.status(400).json({
         ok: false,
@@ -40,20 +48,27 @@ export async function requestInvoice(req, res) {
 
     const pdfBuffer = await generateInvoicePdfBuffer(validation.order);
 
+    console.log("[PDF_GENERATED]", {
+      orderNumber: validation.order.orderNumber,
+      pdfBytes: pdfBuffer?.length || 0,
+    });
+
     const mailResult = await sendInvoiceEmail({
       orderNumber: validation.order.orderNumber,
       pdfBuffer,
     });
 
+    console.log("[MAIL_RESULT]", mailResult);
+
     return res.status(200).json({
       ok: true,
-      message: mailResult.skipped
+      message: mailResult?.skipped
         ? "Invoice generated successfully. SMTP is not configured, so email sending was skipped."
         : "Invoice generated successfully and emailed.",
       data: {
         orderNumber: validation.order.orderNumber,
         currency: validation.order.currency,
-        sentTo: "aamir@mahimediasolutions.com",
+        sentTo: process.env.INVOICE_RECEIVER_EMAIL || "aamir@mahimediasolutions.com",
       },
     });
   } catch (error) {
@@ -63,6 +78,7 @@ export async function requestInvoice(req, res) {
       ok: false,
       code: "SERVER_ERROR",
       message: "Something went wrong while processing the invoice request.",
+      error: error?.message || "Unknown server error",
     });
   }
 }
@@ -73,7 +89,15 @@ export async function previewInvoice(req, res) {
     const email = normalizeEmail(req.query.email || "");
     const shouldDownload = req.query.download === "1";
 
+    console.log("[INVOICE_PREVIEW_START]", {
+      email,
+      orderNumber,
+      shouldDownload,
+    });
+
     const validation = await validateOrderAndEmail({ email, orderNumber });
+
+    console.log("[INVOICE_PREVIEW_VALIDATION]", validation);
 
     if (validation.status !== "MATCHED") {
       return res.status(400).json({
@@ -84,6 +108,11 @@ export async function previewInvoice(req, res) {
     }
 
     const pdfBuffer = await generateInvoicePdfBuffer(validation.order);
+
+    console.log("[INVOICE_PREVIEW_PDF_READY]", {
+      orderNumber,
+      pdfBytes: pdfBuffer?.length || 0,
+    });
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
@@ -99,6 +128,7 @@ export async function previewInvoice(req, res) {
       ok: false,
       code: "SERVER_ERROR",
       message: "Failed to generate invoice preview.",
+      error: error?.message || "Unknown server error",
     });
   }
 }
