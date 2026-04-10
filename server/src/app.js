@@ -48,6 +48,14 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/invoice", invoiceRoutes);
 
+app.use((err, _req, res, _next) => {
+  console.error("[APP_ERROR]", err);
+  res.status(500).json({
+    ok: false,
+    message: err.message || "Internal server error",
+  });
+});
+
 app.use((req, res) => {
   res.status(404).json({
     success: false,
