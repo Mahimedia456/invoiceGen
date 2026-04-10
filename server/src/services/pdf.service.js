@@ -11,28 +11,33 @@ function money(symbol, value) {
   return `${symbol}${Number(value || 0).toFixed(2)}`;
 }
 
+function drawBox(doc, x, y, w, h) {
+  doc
+    .lineWidth(0.8)
+    .strokeColor("#DCDCDC")
+    .rect(x, y, w, h)
+    .stroke();
+}
+
 function drawCell(doc, x, y, w, h, text = "", opts = {}) {
   const {
     fontSize = 9.5,
     bold = false,
     color = "#666666",
     align = "left",
-    padding = 7,
+    paddingX = 10,
+    paddingY = 8,
   } = opts;
 
-  doc
-    .lineWidth(0.8)
-    .strokeColor("#E5E5E5")
-    .rect(x, y, w, h)
-    .stroke();
+  drawBox(doc, x, y, w, h);
 
   doc
     .fillColor(color)
     .font(bold ? "Helvetica-Bold" : "Helvetica")
     .fontSize(fontSize)
-    .text(String(text), x + padding, y + padding, {
-      width: w - padding * 2,
-      height: h - padding * 2,
+    .text(String(text || ""), x + paddingX, y + paddingY, {
+      width: w - paddingX * 2,
+      height: h - paddingY * 2,
       align,
       ellipsis: true,
     });
@@ -54,69 +59,79 @@ export async function generateInvoicePdfBuffer(order) {
     const pageW = 595.28;
     const pageH = 841.89;
 
-    doc.rect(0, 0, pageW, pageH).fill("#F3F3F3");
+    // page bg
+    doc.rect(0, 0, pageW, pageH).fill("#F2F2F2");
 
-    // main centered sheet
-    const sheetX = 98;
+    // centered sheet
+    const sheetX = 86;
     const sheetY = 0;
-    const sheetW = 350;
-    const sheetH = 780;
+    const sheetW = 390;
+    const sheetH = 792;
 
-    // black top strip
-    doc.rect(sheetX, sheetY, sheetW, 66).fill("#000000");
+    // top black strip
+    doc.rect(sheetX, 0, sheetW, 68).fill("#000000");
 
+    // top logo
     if (fs.existsSync(invoiceLogoPath)) {
       doc.image(invoiceLogoPath, sheetX + sheetW / 2 - 18, 14, {
         fit: [36, 36],
       });
     }
 
-    doc.rect(sheetX, 66, sheetW, 714).fill("#FFFFFF");
+    // white invoice body
+    doc.rect(sheetX, 68, sheetW, 724).fill("#FFFFFF");
 
+    // heading
     doc
-      .fillColor("#A9A9A9")
+      .fillColor("#A8A8A8")
       .font("Helvetica")
-      .fontSize(19)
-      .text(`Tax Invoice for Order #${order.orderNumber}`, 124, 96, {
-        width: 250,
+      .fontSize(22)
+      .text(`Tax Invoice for Order #${order.orderNumber}`, sheetX + 28, 106, {
+        width: 265,
       });
 
+    // company
     doc
-      .fillColor("#4E4E4E")
+      .fillColor("#4F4F4F")
       .font("Helvetica-Bold")
-      .fontSize(9.5)
-      .text(order.company?.name || "Atomos Global Pty Ltd", 130, 180);
+      .fontSize(10.5)
+      .text(order.company?.name || "Atomos Global Pty Ltd", sheetX + 30, 196);
 
     doc
       .fillColor("#666666")
       .font("Helvetica")
-      .fontSize(8.8)
-      .text(order.company?.line1 || "", 130, 195)
-      .text(order.company?.line2 || "", 130, 208)
-      .text(order.company?.country || "", 130, 221);
+      .fontSize(9.5)
+      .text(order.company?.line1 || "", sheetX + 30, 212)
+      .text(order.company?.line2 || "", sheetX + 30, 227)
+      .text(order.company?.country || "", sheetX + 30, 242);
 
     doc
-      .fillColor("#1EB6A7")
+      .fillColor("#14AFA1")
       .font("Helvetica")
-      .fontSize(16)
-      .text("TAX INVOICE", 330, 190, { width: 90, align: "right" });
+      .fontSize(18)
+      .text("TAX INVOICE", sheetX + 268, 196, {
+        width: 90,
+        align: "right",
+      });
 
-    const leftX = 130;
-    const labelW = 64;
-    const contentW = 230;
-    const blockH = 72;
+    // address blocks
+    const addrX = sheetX + 30;
+    const addrY = 286;
+    const labelW = 78;
+    const contentW = 282;
+    const rowH = 78;
 
-    drawCell(doc, leftX, 264, labelW, blockH, "Bill to", {
+    drawCell(doc, addrX, addrY, labelW, rowH, "Bill to", {
       bold: true,
-      fontSize: 9,
+      fontSize: 9.5,
     });
 
     drawCell(
       doc,
-      leftX + labelW,
-      264,
+      addrX + labelW,
+      addrY,
       contentW,
-      blockH,
+      rowH,
       [
         order.billTo?.name || "",
         order.billTo?.company || "",
@@ -127,21 +142,21 @@ export async function generateInvoicePdfBuffer(order) {
         .filter(Boolean)
         .join("\n"),
       {
-        fontSize: 8.7,
+        fontSize: 9.3,
       }
     );
 
-    drawCell(doc, leftX, 336, labelW, blockH, "Ship to", {
+    drawCell(doc, addrX, addrY + rowH, labelW, rowH, "Ship to", {
       bold: true,
-      fontSize: 9,
+      fontSize: 9.5,
     });
 
     drawCell(
       doc,
-      leftX + labelW,
-      336,
+      addrX + labelW,
+      addrY + rowH,
       contentW,
-      blockH,
+      rowH,
       [
         order.shipTo?.name || "",
         order.shipTo?.company || "",
@@ -152,15 +167,16 @@ export async function generateInvoicePdfBuffer(order) {
         .filter(Boolean)
         .join("\n"),
       {
-        fontSize: 8.7,
+        fontSize: 9.3,
       }
     );
 
-    const metaX = 130;
-    const metaY = 430;
-    const metaL = 120;
-    const metaR = 174;
-    const metaH = 28;
+    // metadata table
+    const metaX = addrX;
+    const metaY = 462;
+    const metaLW = 130;
+    const metaRW = 230;
+    const metaRH = 31;
 
     const metaRows = [
       ["VAT Number", order.billToVat || order.customerVat || ""],
@@ -171,48 +187,46 @@ export async function generateInvoicePdfBuffer(order) {
     ];
 
     metaRows.forEach((row, i) => {
-      const y = metaY + i * metaH;
-      drawCell(doc, metaX, y, metaL, metaH, row[0], {
+      const y = metaY + i * metaRH;
+      drawCell(doc, metaX, y, metaLW, metaRH, row[0], {
         bold: true,
-        fontSize: 8.8,
+        fontSize: 9.2,
       });
-      drawCell(doc, metaX + metaL, y, metaR, metaH, row[1], {
-        fontSize: 8.8,
+      drawCell(doc, metaX + metaLW, y, metaRW, metaRH, row[1], {
+        fontSize: 9.2,
       });
     });
 
-    const tableX = 130;
-    const tableY = 582;
-    const descW = 160;
-    const qtyW = 42;
-    const unitW = 70;
-    const amtW = 52;
+    // items table
+    const tableX = addrX;
+    const tableY = 626;
+    const descW = 186;
+    const qtyW = 52;
+    const unitW = 72;
+    const amtW = 50;
     const headH = 38;
-    const itemH = 40;
-    const sumH = 26;
+    const itemH = 36;
+    const sumH = 28;
 
     drawCell(doc, tableX, tableY, descW, headH, "Description", {
       bold: true,
-      fontSize: 8.8,
-      padding: 10,
+      fontSize: 9.2,
     });
     drawCell(doc, tableX + descW, tableY, qtyW, headH, "Qty", {
       bold: true,
-      fontSize: 8.8,
+      fontSize: 9.2,
       align: "center",
-      padding: 10,
     });
     drawCell(doc, tableX + descW + qtyW, tableY, unitW, headH, "Unit Price", {
       bold: true,
-      fontSize: 8.8,
+      fontSize: 9.2,
       align: "center",
-      padding: 10,
     });
     drawCell(doc, tableX + descW + qtyW + unitW, tableY, amtW, headH, "Amount", {
       bold: true,
-      fontSize: 8.8,
+      fontSize: 9.2,
       align: "center",
-      padding: 10,
+      paddingX: 6,
     });
 
     const item =
@@ -221,13 +235,11 @@ export async function generateInvoicePdfBuffer(order) {
         : { name: "", qty: 1, unitPrice: 0, amount: 0 };
 
     drawCell(doc, tableX, tableY + headH, descW, itemH, item.name || "", {
-      fontSize: 8.6,
-      padding: 10,
+      fontSize: 9.1,
     });
     drawCell(doc, tableX + descW, tableY + headH, qtyW, itemH, String(item.qty || 1), {
-      fontSize: 8.6,
+      fontSize: 9.1,
       align: "center",
-      padding: 10,
     });
     drawCell(
       doc,
@@ -237,9 +249,9 @@ export async function generateInvoicePdfBuffer(order) {
       itemH,
       money(order.currencySymbol || "€", item.unitPrice || 0),
       {
-        fontSize: 8.6,
+        fontSize: 9.1,
         align: "right",
-        padding: 10,
+        paddingX: 8,
       }
     );
     drawCell(
@@ -250,9 +262,9 @@ export async function generateInvoicePdfBuffer(order) {
       itemH,
       money(order.currencySymbol || "€", item.amount || 0),
       {
-        fontSize: 8.6,
+        fontSize: 9.1,
         align: "right",
-        padding: 10,
+        paddingX: 6,
       }
     );
 
@@ -268,16 +280,18 @@ export async function generateInvoicePdfBuffer(order) {
 
     summaryRows.forEach((row, i) => {
       const y = summaryY + i * sumH;
+
       drawCell(doc, tableX, y, summaryLW, sumH, row[0], {
         bold: true,
-        fontSize: 8.8,
+        fontSize: 9.2,
         align: "right",
-        padding: 8,
+        paddingX: 12,
       });
+
       drawCell(doc, tableX + summaryLW, y, summaryRW, sumH, row[1], {
-        fontSize: 8.8,
+        fontSize: 9.2,
         align: "right",
-        padding: 8,
+        paddingX: 6,
       });
     });
 
@@ -285,7 +299,7 @@ export async function generateInvoicePdfBuffer(order) {
       .fillColor("#555555")
       .font("Helvetica")
       .fontSize(8.5)
-      .text("© 2025 Atomos", 0, 754, {
+      .text("© 2026 Atomos", 0, 765, {
         width: pageW,
         align: "center",
       });

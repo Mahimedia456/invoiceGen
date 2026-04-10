@@ -13,6 +13,13 @@ app.use(
 
 app.use(express.json());
 
+app.get("/", (_req, res) => {
+  res.json({
+    ok: true,
+    message: "Invoice API is live",
+  });
+});
+
 app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
