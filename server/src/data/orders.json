@@ -1,0 +1,42 @@
+[
+  {
+    "orderNumber": "ATOMOS-2025-40956",
+    "email": "florent@example.com",
+    "currency": "EURO",
+    "currencySymbol": "€",
+    "date": "2025-12-09",
+    "vatNumber": "NL827809414B01",
+    "terms": "Paid in advance",
+    "company": {
+      "name": "Atomos Global Pty Ltd",
+      "line1": "350 Queen St",
+      "line2": "Melbourne VIC, 3000",
+      "country": "Australia"
+    },
+    "billTo": {
+      "name": "Florent Irion",
+      "company": "Fjallamyndir ehf",
+      "line1": "3 Rue de Sainte-Hélène",
+      "line2": "La Wantzenau , 67610",
+      "country": "France"
+    },
+    "shipTo": {
+      "name": "Florent Irion",
+      "company": "Fjallamyndir ehf",
+      "line1": "3 Rue de Sainte-Hélène",
+      "line2": "La Wantzenau , 67610",
+      "country": "France"
+    },
+    "items": [
+      {
+        "name": "Shinobi II (B-Stock)",
+        "qty": 1,
+        "unitPrice": 295.83,
+        "amount": 319.5
+      }
+    ],
+    "subtotal": 295.83,
+    "tax": 23.67,
+    "total": 319.5
+  }
+]

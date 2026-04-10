@@ -1,0 +1,89 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply m-0 min-h-screen bg-atomos-bg font-sans text-atomos-text antialiased;
+    background-image: radial-gradient(
+      circle at top,
+      rgba(0, 220, 197, 0.08),
+      transparent 30%
+    );
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+
+  * {
+    @apply box-border;
+  }
+
+  a {
+    @apply text-inherit no-underline;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+}
+
+@layer components {
+  .page-shell {
+    @apply min-h-screen bg-atomos-bg text-atomos-text;
+  }
+
+  .section-wrap {
+    @apply container max-w-8xl;
+  }
+
+  .card-dark {
+    @apply rounded-3xl border border-atomos-border bg-atomos-surface/95 shadow-card backdrop-blur-sm;
+  }
+
+  .input-dark {
+    @apply w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition duration-200 ease-smooth placeholder:text-white/35 focus:border-atomos-accent focus:ring-2 focus:ring-atomos-accent/20;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-full bg-atomos-accent px-6 py-3 text-sm font-bold text-black transition duration-200 ease-smooth hover:bg-atomos-accentHover disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-full border border-white/20 bg-transparent px-6 py-3 text-sm font-bold text-white transition duration-200 ease-smooth hover:border-atomos-accent hover:text-atomos-accent;
+  }
+
+  .heading-xl {
+    @apply text-4xl font-extrabold tracking-tight text-white md:text-5xl;
+  }
+
+  .text-muted {
+    @apply text-sm leading-6 text-white/65;
+  }
+}
+
+  .panel-glow {
+    @apply border border-white/10 bg-gradient-to-b from-white/[0.05] to-white/[0.02] shadow-card backdrop-blur-sm;
+  }
+
+  .section-title {
+    @apply text-[11px] font-extrabold uppercase tracking-[0.26em] text-atomos-accent;
+  }
+
+  .soft-divider {
+    @apply border-t border-white/10;
+  }
